@@ -36,9 +36,9 @@ def min_heapify(heap , current_index , last_index):
     if not index_of_min == current_index:
         swap_tuples(heap, current_index, index_of_min)
         min_heapify(heap , index_of_min, last_index)
-    else:
+    #else:
         # we are done
-        return
+    #    return
 
 # helper function, simply swaps tuples contained in two indecies
 # NOTE, this function operates on the heap provided it
@@ -67,32 +67,23 @@ def pop_min(min_heap):
 
     return return_tuple
 
-'''
-# function that takes a list of tuples of type (int,_) and returns a min_heap version
-# of that list
-def build_min_heap(tuple_list):
-    # we can use this list to create our min heap
-    min_heap = [-1] # we use a nonsene value to hold our 0th index, as we want to play with more comprehensible 1-indexed list
-
-    for entry in tuple_list:
-        (freq , word) = entry
-        # we put this new entry in the last 'available' position
-        min_heap.append( (freq,word) )
-        # bubble this tuple up until its frequency value is greater than that of its parents
-        current_index = len(min_heap) - 1 # the index of the value we just added
-        parent_index = current_index // 2 
-        in_place = False
-        while(not in_place and not parent_index < 1):
-            (parent_freq, parent_word) = min_heap[parent_index]
-            if freq < parent_freq:
-                # swap with parent
-                min_heap[parent_index] = (freq,word)
-                min_heap[current_index] = (parent_freq,parent_word)
-            else:
-                in_place = True
-
-    return min_heap
-'''
+# function that inserts a tuple (freq, child) into a min_heap and bubbles it up until the integrity of the min 
+# heap is maintained
+def min_insert(min_heap, insert_tuple):
+    # insert the tuple on the end
+    min_heap.append(insert_tuple)
+    current_index = len(min_heap) - 1
+    parent_index = current_index // 2
+    in_place = False
+    while not in_place and not parent_index < 1:
+        (current_freq, current_child) = min_heap[current_index]
+        (parent_freq, parent_child) = min_heap[parent_index]
+        if current_freq < parent_freq:
+            swap_tuples(min_heap , current_index , parent_index)
+            current_index = parent_index
+            parent_index = current_index // 2
+        else:
+            in_place = True
 
 # given a tuple list (using a placeholder value in its 0th index), build a min_heap in-place
 # note, this function works on and alters its parameter
@@ -107,47 +98,6 @@ def build_min_heap(tuple_list):
     while last_parent_index >= 1:
         min_heapify(tuple_list , last_parent_index , last_index)
         last_parent_index -= 1
-    
-'''
-# function that accepts a min_heap and pops off the minimum element from the root
-# This fucntion alters the given min_heap, and ensures the new root is the smallest
-# element
-def pop_min(min_heap):
-    # our root is the value to return
-    return_tuple = min_heap.pop(1)  #we have 1-indexed heaps
-
-    # we put the last element in the heap in the root spot, unless it was already
-    # moved there via our pop()
-    if len(min_heap) > 2:
-        # pop the last element out
-        new_root = min_heap.pop(len(min_heap) - 1)
-        current_index = 1
-        min_heap.insert(current_index, new_root)
-        (freq , word) = min_heap[current_index]
-        in_place = False
-        l_child_index = current_index * 2
-        r_child_index = (current_index * 2) + 1 
-        while not in_place:
-            # if there is a left child
-            max_index = len(min_heap) - 1
-            l_child_exists = l_child_index <= max_index
-            r_child_exists = r_child_index <= max_index
-            if l_child_exists and r_child_exists:
-                pass
-            elif r_child_exists:
-                pass
-            else:
-                # only left child exists
-                pass
-
-
-
-
-
-    return return_tuple
-'''
-
-
 
 def code(msg):
     # generate a frequency table for all our bytes
@@ -168,11 +118,27 @@ def code(msg):
     for entry,freq in freqs.items():
            freq_list.append( (freq , entry) )
 
+    # PLEASE FIX THIS CRAP
+    freq_list.insert(0, -1)
+
+    print(freq_list)
+
     # we can use this list to create our min heap
-    min_heap = build_min_heap(freq_list)
+    build_min_heap(freq_list)
+    min_heap = freq_list
+    
+    print(min_heap)
 
     # apply huffman algo to get our encoding tree
+    while len(min_heap) > 2:
+        min1_tuple = (min1_freq , min1_child) = pop_min(min_heap)
+        min2_tuple = (min2_freq , min2_child) = pop_min(min_heap)
+        new_tuple = (min1_freq + min2_freq , [min1_tuple , min2_tuple])
+        min_insert(min_heap , new_tuple)
 
+    print(min_heap)
+
+        
 
     # use tree to encode message
 
