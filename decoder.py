@@ -32,7 +32,7 @@ def decode_alt(msg, decode_dict):
     for byte in msg:
         path += byte
         if path in decode_dict:
-            decodedMsg += decode_dict[path]
+            decodedMsg += str(decode_dict[path])
             path = ""
     return decodedMsg 
         

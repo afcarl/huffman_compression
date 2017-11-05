@@ -2,6 +2,7 @@ import os
 import sys
 import marshal
 import array
+from decoder import decode_alt
 from priority_queue import PriorityQueue
 
 try:
@@ -57,7 +58,7 @@ def code(msg):
 
 
     #print huffman_tree
-    return (return_str, decoding_dict)
+    return return_str, decoding_dict
 
 
         
@@ -90,8 +91,7 @@ def process_tree(tree):
             return tree[1]
 
 def decode(str, decoderRing):
-
-    raise NotImplementedError
+    return decode_alt(str, decoderRing)
 
 def compress(msg):
 
@@ -139,7 +139,8 @@ if __name__=='__main__':
             fcompressed.close()
         else:
             msg, tree = code(str)
-            print(msg)
+            #print(tree)
+            #print(msg)
             fcompressed = open(outfile, 'wb')
             marshal.dump((pickle.dumps(tree), msg), fcompressed)
             fcompressed.close()
@@ -151,6 +152,7 @@ if __name__=='__main__':
         if decompressing:
             str = decompress(msg, tree)
         else:
+            #print(msg)
             str = decode(msg, tree)
             print(str)
         fp = open(outfile, 'wb')
