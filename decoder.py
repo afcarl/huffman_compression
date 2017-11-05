@@ -6,9 +6,10 @@
 #'g': '010'
 #'f': '100'
 
-tree = [['a', ['g', 'c']], [['f', ['b', 'd']], 'e']]
+#tree = [['a', ['g', 'c']], [['f', ['b', 'd']], 'e']]
+tree = ['l' , ['e',['h','o']]]
 
-msg = "0110001011"
+msg = "1101000111"
 
 def decode(msg, tree):
     newMsg = ""
@@ -22,4 +23,16 @@ def decode(msg, tree):
     msg = newMsg
     return msg
 
-print(decode(msg, tree))
+#print(decode(msg, tree))
+
+
+def decode_alt(msg, decode_dict):
+    decodedMsg = ""
+    path = ""
+    for byte in msg:
+        path += byte
+        if path in decode_dict:
+            decodedMsg += decode_dict[path]
+            path = ""
+    return decodedMsg 
+        

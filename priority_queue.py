@@ -40,7 +40,7 @@ class PriorityQueue:
 
     # will remove the minimum value from the priority queue and return it
     # this function will call min_heapify to ensure that min-heap integrity is retained
-    def pop_min(self):
+    def dequeue(self):
         # if there are not at least two items in the min_heap, it doesn't follow my specification
         if len(self.heap) < 2:
             return None
@@ -59,7 +59,7 @@ class PriorityQueue:
 
     # function that inserts a tuple (freq, child) into a min_heap and bubbles it up until the integrity of the min 
     # heap is maintained
-    def min_insert(self, insert_tuple):
+    def enqueue(self, insert_tuple):
         # insert the tuple on the end
         self.heap.append(insert_tuple)
         current_index = len(self.heap) - 1
@@ -92,9 +92,15 @@ class PriorityQueue:
             self.min_heapify(last_parent_index , last_index)
             last_parent_index -= 1
 
+    # function that returns the length of the priority queue (ignoring, of course
+    # our dummy value -1 at 0th index
+    def length(self):
+        return len(self.heap) - 1
+
     # function primarily for testing, will display the queue
     def display(self):
         print(self.heap)
+
 
         
     
