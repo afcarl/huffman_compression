@@ -94,8 +94,20 @@ def decode(str, decoderRing):
     return decode_alt(str, decoderRing)
 
 def compress(msg):
-
-    raise NotImplementedError
+    bitstream = array.array('B')
+    buf = 0
+    count = 0
+    for bit in msg:
+        if(bit == "0"):
+            buf = (buf<<1)
+        else:
+            buf = (buf<<1|1)
+        count += 1
+        if count >= 8:
+            bitstream.append(buf)
+            buf = 0
+    return bitstream
+    #raise NotImplementedError
 
 def decompress(str, decoderRing):
 
