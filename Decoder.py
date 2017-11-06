@@ -7,10 +7,10 @@
 #'f': '100'
 import array
 
-decoderRing = [['a', ['g', 'c']], [['f', ['b', 'd']], 'e']]
+#decoderRing = [['a', ['g', 'c']], [['f', ['b', 'd']], 'e']]
+decoderRing = [['a','b'],['c','d']]
 #cageaaa
-msg = "0110001011000000"
-
+msg = "00011011"
 #the function that decodes the string into its letter form using
 #the huffman tree in array form
 def decode(msg, decoderRing):
@@ -31,6 +31,9 @@ def decode(msg, decoderRing):
     return msg
 
 def compress(msg):
+    newMsg = "1"
+    newMsg += msg
+    msg = newMsg
     bitstream = array.array('B')
     buf = 0
     count = 0
@@ -61,10 +64,23 @@ def decompress(msg, decoderRing):
     #reversing the order of the string, since its in reverse order
     #of the encoded message
     result = bits[::-1]
+
+    #Here, we remove the first number of the binary string, since it
+    #acts as a way for the compress function to not count out any zeroes
+    #at the front of the number
+    newResult = result[1:]
+    result = newResult[1:]
+    
     #returning the return value of the decode function with result
     #as the parameter
     return decode(result,decoderRing)
 
-print(compress(msg))
-print(decompress(compress(msg), decoderRing))
+#print(decode(msg, decoderRing))
+#print(compress(msg))
+#print(decompress(compress(msg), decoderRing))
 
+binary = "1010111010101010101"
+decimal = 0
+for digit in binary:
+    decimal = decimal*2 + int(digit)
+print(decimal)
