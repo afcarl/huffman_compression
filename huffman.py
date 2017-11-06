@@ -3,35 +3,25 @@ import sys
 import marshal
 import array
 import copy
-#from decoder import decode_alt
-#from priority_queue import PriorityQueue
-#from utility import build_encoding_dict
-#from utility import process_tree
 
 try:
     import cPickle as pickle
 except:
     import pickle
 
-############################################################################
-def decode_alt(msg, decode_dict):
-    decodedMsg = ""
-    path = ""
-    for byte in msg:
-        path += byte
-        if path in decode_dict:
-            decodedMsg += str(decode_dict[path])
-            path = ""
-    return decodedMsg 
- 
+
 #############################################################################
+# class definition for Priority Queue for use in huffman compression
+# this priority queue uses a min-heap to continually return the minimum
+# value
 class PriorityQueue:
-    # constructor, sets our list and gives it dummy value
+    # constructor, sets our heap list and gives it dummy value (for ease of indexing)
     def __init__(self):
         heap = [-1]
 
-    # function that will min-heapify starting at a given index down to given end
+    # function that will min-heapify starting at a given index down to given end (end of heap)
     def min_heapify(self , current_index , last_index):
+        # INVARIANT - Initialization: The value at the current index represents a binary tree with 0-2 children, unsorted
         l_child_index = current_index * 2
         r_child_index = (current_index * 2) + 1
         index_of_min = current_index
@@ -52,9 +42,15 @@ class PriorityQueue:
 
         # if the index of min is not the current index, we swap the tuples therein contained, and 
         # recursively call on the index where our min val is being swapped out of
+        # INVARIANT- Maintenance: the minimum value in our binary tree is swapped into the root spot,
+        #                       satisfying the conditions and making it a min-heap, min_heapify is recursively
+        #                       called to ensure that all subtrees of the newly swapped node also are consistent
+        #                       with our min-heap rules
         if not index_of_min == current_index:
             self.swap_tuples(current_index, index_of_min)
             self.min_heapify(index_of_min, last_index)
+
+        # INVARIANT - Termination: the element at current_index represents a subtree that is itself also a min-heap
 
     # helper function, simply swaps tuples contained in two indecies
     def swap_tuples(self , i , j):
@@ -65,19 +61,24 @@ class PriorityQueue:
     # will remove the minimum value from the priority queue and return it
     # this function will call min_heapify to ensure that min-heap integrity is retained
     def dequeue(self):
+        # INVARIANT - Initialization: The root element of the min-heap is smaller than any of its children, and
+        #                           thus is the smallest element in the queue
         # if there are not at least two items in the min_heap, it doesn't follow my specification
         if len(self.heap) < 2:
             return None
+        # there is one item in the heap (not including dummy value), so return it
         if len(self.heap) == 2:
             return self.heap.pop(1)
+
         # get the frequency tuple to return
         return_tuple = self.heap.pop(1)
 
-        # replace the removed tuple with the last item in the heap
+        # replace the removed tuple with the last item in the heap and heapify it downwards
         last_index = len(self.heap) - 1
         last_item = self.heap.pop(last_index)
         self.heap.insert(1, last_item)
         self.min_heapify(1, last_index)
+        # INVARIANT - Termination - the smallest element in the heap once again sits in the root position
 
         return return_tuple
 
@@ -89,6 +90,13 @@ class PriorityQueue:
         current_index = len(self.heap) - 1
         parent_index = current_index // 2
         in_place = False
+        # INVARIANT - Initialization: The value just inserted is the last value in our min-heap,
+        #                           and may or may not currently satisfy the conditions of our min-heap
+        # INVARIANT - Maintenance: At each iteration of the while loop, the inserted value will propogate
+        #                       upwards if it is determined to be less than its parent (it will swap with its parent)
+        #                       This is guaranteed to maintain the integrity of the min-heap, as if it is smaller than
+        #                       it's parent, it is by definition also smaller than any sibling it may have (as that sibling
+        #                       must necessarily have been larger than the parent by definition)
         while not in_place and not parent_index < 1:
             (current_freq, current_child) = self.heap[current_index]
             (parent_freq, parent_child) = self.heap[parent_index]
@@ -98,6 +106,7 @@ class PriorityQueue:
                 parent_index = current_index // 2
             else:
                 in_place = True
+        # INVARIANT - Termination: The node sits as the root of a subtree wherein it is smaller than any of its children
 
     # given a tuple list build a min_heap 
     def build_queue(self, tuple_list):
@@ -106,32 +115,31 @@ class PriorityQueue:
         self.heap.insert(0, -1)
 
         # given a list of tuples, turn that into a heap by applying min_heapify from bottom up
-        # get get the index of the last element in our list
+        # get the index of the last element in our list
         last_index = len(self.heap) - 1
-        # all elements after last_index / 2 are leaf nodes, due to the properties of a binary tree
+        # INVARIANT - Initialization- all elements after (last_index / 2) are leaf nodes, due to the properties of a binary tree
         # and we don't need to look at these, as they are trivially min-heaps
         # starting with all parent nodes, we heapify them and move upwards
         last_parent_index = last_index // 2
+        # INVARIANT - Maintenance: after each iteration, the element at last_parent_index will represent a subtree that is guaranteed
+        #                       to be a min-heap
         while last_parent_index >= 1:
             self.min_heapify(last_parent_index , last_index)
             last_parent_index -= 1
+
+        # INVARIANT - Termination: self.heap represents a min-heap
 
     # function that returns the length of the priority queue (ignoring, of course
     # our dummy value -1 at 0th index
     def length(self):
         return len(self.heap) - 1
 
-    # function primarily for testing, will display the queue
-    def display(self):
-        print(self.heap)
-
-
-        
-    
-
-
 ##############################################################################
 # group of utility functions for huffman encoding
+# takes our (freq, [list of children]) tuple and constructs both an encoding and 
+# decoding dictionary. Our encoding dictionary is indexed by the char with its 
+# value being the path to that value on the tree, whereas the decoding dictionary
+# represents the inverse
 def build_encoding_dict(path, child, encode_dict, decoding_dict):
     (left , right) = child
     if not isinstance(right, list) and not isinstance(right, tuple):
@@ -143,7 +151,7 @@ def build_encoding_dict(path, child, encode_dict, decoding_dict):
         build_encoding_dict(path + "0" , right[0] , encode_dict, decoding_dict)
         build_encoding_dict(path + "1" , right[1] , encode_dict, decoding_dict)
     
-
+# takes our huffman tree and turns it into a (freq, [list of children') tuple
 def process_tree(tree):
     if isinstance(tree, list):
         return process_tree(tree[0]).append(process_tree(tree[1]))
@@ -209,7 +217,15 @@ def code(msg):
 
 ############################################################################################
 def decode(str, decoderRing):
-    return decode_alt(str, decoderRing)
+    decodedMsg = ""
+    path = ""
+    for byte in msg:
+        path += byte
+        if path in decode_dict:
+            decodedMsg += str(decode_dict[path])
+            path = ""
+    return decodedMsg 
+
 ############################################################################################
 
 ############################################################################################
@@ -318,17 +334,10 @@ def decompress(msg, decoderRing):
         # it and append it to our overall bits string
         word = word[::-1]
         bits += word
-
-    #return bits
-
-    #Here, we remove the first number of the binary string, since it
-    #acts as a way for the compress function to not count out any zeroes
-    #at the front of the number
-    #newResult = result[1:]
-    #result = newResult[1:]
     
-    #returning the return value of the decode function with result
-    #as the parameter
+    # we now have a literal string of 1's and 0's translated from our bitstring
+    # we process this just as we did in the decode function, save for the
+    # added functionality of halting when we see the EOF terminator
     path = ""
     decodedMsg = ""
     for bit in bits:
@@ -344,12 +353,6 @@ def decompress(msg, decoderRing):
     return decodedMsg 
 
     return decode(bits,decoderRing)
-
-
-   # code = str
-   # print(code)
-
-    #raise NotImplementedError
 
 #############################################################################################
 
